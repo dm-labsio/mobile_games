@@ -230,10 +230,10 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
   <section id="panelStart" class="panel">
     <div class="eyebrow">Prototype</div>
     <h1>Voxel Pop</h1>
-    <p>Peel a voxel object layer by layer until the treasure inside shows.</p>
+    <p>Peel a voxel object layer by layer until nothing is left.</p>
     <ul class="rules">
       <li><i style="background:#ff8fab"></i><span><b>Front row only.</b> Tap a gun in the top row of the rack to holster it. The gun behind it moves up.</span></li>
-      <li><i style="background:#6fc3ff"></i><span><b>Guns only hit what they can see.</b> A gun whose colour isn't showing waits in its holster. Five waiting guns and you're stuck.</span></li>
+      <li><i style="background:#6fc3ff"></i><span><b>Guns only hit what faces them.</b> Cubes on the back wait for the turntable, or spin the object yourself. A gun whose colour isn't showing waits in its holster. Five waiting guns and you're stuck.</span></li>
       <li><i style="background:#8d8aa3"></i><span><b>Chained pairs</b> go together: both must be in the front row, and you need two free holsters.</span></li>
     </ul>
     <div id="levelList" class="levels"></div>
@@ -266,8 +266,8 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
   </section>
 
   <section id="panelWin" class="panel" hidden>
-    <div class="eyebrow">Revealed</div>
-    <h2 id="winTitle">Treasure!</h2>
+    <div class="eyebrow">Cleared</div>
+    <h2 id="winTitle">Gone!</h2>
     <div class="stats">
       <div class="stat"><b id="statTime">0:00</b><span>Time</span></div>
       <div class="stat"><b id="statCombo">0</b><span>Best streak</span></div>
@@ -302,13 +302,13 @@ const PALETTE = {
 };
 
 /* ============================== Levels ============================== */
-// A level is a voxel grid. `inside` says which cells are solid, `core` which solid cells are the hidden
-// treasure (never shot), `surface` colours cells on the outside and `interior` colours the layers underneath.
-// Colours are indexes into the level's six-colour list, so every level has exactly six gun colours.
+// A level is a voxel grid. `inside` says which cells are solid, `surface` colours cells on the outside and
+// `interior` colours the layers underneath. Colours are indexes into the level's six-colour list, so every
+// level has exactly six gun colours. The object is peeled until nothing is left.
 const LEVELS = [
   {
-    id: 'chest', name: 'Treasure Chest', title: 'Gold!', tagline: 'Planks outside, stripes inside, gold at the heart.',
-    colors: ['wood', 'cocoa', 'gold', 'mint', 'sky', 'coral'], coreColor: 'gold',
+    id: 'chest', name: 'Treasure Chest', title: 'Gone!', tagline: 'Planks outside, stripes inside.',
+    colors: ['wood', 'cocoa', 'gold', 'mint', 'sky', 'coral'],
     build() {
       const W = 14, D = 9, HB = 6, HL = 4, H = HB + HL;
       const inside = (x, y, z) => {
@@ -316,11 +316,6 @@ const LEVELS = [
         if (y < HB) return true;
         const t = (z + .5 - D / 2) / (D / 2);
         return y < HB + HL * Math.sqrt(Math.max(0, 1 - t * t));
-      };
-      const core = (x, y, z) => {
-        if (x < 3 || x >= W - 3 || z < 2 || z >= D - 2 || y < 1) return false;
-        const h = 1 + Math.max(1, 3 - Math.floor((Math.abs(x - 6.5) + Math.abs(z - 4)) / 3));
-        return y < h;
       };
       const band = (x) => x === 2 || x === 3 || x === W - 3 || x === W - 4;
       const surface = (x, y, z) => {
@@ -333,18 +328,17 @@ const LEVELS = [
         const axis = d % 3, coord = axis === 0 ? x : axis === 1 ? y : z;
         return (Math.floor(coord / 2) + d) % 6;
       };
-      return voxelize(W, H, D, inside, core, surface, interior);
+      return voxelize(W, H, D, inside, surface, interior);
     },
   },
   {
-    id: 'cake', name: 'Birthday Cake', title: 'A ring!', tagline: 'Three tiers of frosting. Something golden baked inside.',
-    colors: ['cream', 'rose', 'berry', 'lemon', 'peach', 'mint'], coreColor: 'gold',
+    id: 'cake', name: 'Birthday Cake', title: 'Eaten!', tagline: 'Three tiers of frosting, sponge layers inside.',
+    colors: ['cream', 'rose', 'berry', 'lemon', 'peach', 'mint'],
     build() {
       const W = 15, D = 15, H = 11, cx = 7, cz = 7;
       const tiers = [{ r: 7, y0: 0, y1: 4 }, { r: 5, y0: 4, y1: 8 }, { r: 3, y0: 8, y1: 11 }];
       const tierAt = (x, y, z) => tiers.find(t => y >= t.y0 && y < t.y1 && (x - cx) ** 2 + (z - cz) ** 2 <= t.r * t.r + .5);
       const inside = (x, y, z) => !!tierAt(x, y, z);
-      const core = (x, y, z) => { const r2 = (x - cx) ** 2 + (z - cz) ** 2; return y === 2 && r2 >= 4 && r2 <= 9; };
       const surface = (x, y, z) => {
         const t = tierAt(x, y, z);
         const top = y === t.y1 - 1;
@@ -355,12 +349,12 @@ const LEVELS = [
         return Math.floor((a + Math.PI) / (Math.PI / 4)) % 2 ? 1 : 0;       // candy stripes
       };
       const interior = (x, y, z, d) => (y + d) % 6;                         // sponge layers
-      return voxelize(W, H, D, inside, core, surface, interior);
+      return voxelize(W, H, D, inside, surface, interior);
     },
   },
   {
-    id: 'heart', name: 'Big Heart', title: 'A little heart!', tagline: 'Concentric layers, each a new colour.',
-    colors: ['berry', 'coral', 'rose', 'peach', 'lilac', 'sky'], coreColor: 'gold',
+    id: 'heart', name: 'Big Heart', title: 'Popped!', tagline: 'Concentric layers, each a new colour.',
+    colors: ['berry', 'coral', 'rose', 'peach', 'lilac', 'sky'],
     build() {
       const W = 17, H = 15, D = 11;
       const heart = (x, y, z, s) => {
@@ -371,13 +365,12 @@ const LEVELS = [
         return a * a * a - X * X * Z * Z * Z - .1125 * Y * Y * Z * Z * Z < 0;
       };
       const inside = (x, y, z) => heart(x, y, z, 1);
-      const core = (x, y, z) => heart(x, y, z, 2.7);
       const surface = (x, y, z) => {
         if (x < W * .3 && y > H * .55 && z > D * .45) return 1;             // glossy highlight
         return y > H * .5 ? 2 : 0;
       };
       const interior = (x, y, z, d) => d % 6;                               // onion rings
-      return voxelize(W, H, D, inside, core, surface, interior);
+      return voxelize(W, H, D, inside, surface, interior);
     },
   },
 ];
@@ -385,17 +378,15 @@ const LEVELS = [
 const DIRS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
 const key = (x, y, z) => ((x + 1) * 64 + (y + 1)) * 64 + (z + 1);
 
-function voxelize(W, H, D, inside, isCore, surface, interior) {
-  const solid = new Map(), core = [];
+function voxelize(W, H, D, inside, surface, interior) {
+  const solid = new Map();
   for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) for (let z = 0; z < D; z++) {
-    if (!inside(x, y, z)) continue;
-    if (isCore(x, y, z)) core.push({ x, y, z }); else solid.set(key(x, y, z), { x, y, z });
+    if (inside(x, y, z)) solid.set(key(x, y, z), { x, y, z });
   }
-  const coreKeys = new Set(core.map(c => key(c.x, c.y, c.z)));
   // Onion depth: 0 on the outside, +1 per layer in.
   const depth = new Map(); const q = [];
   for (const [k, c] of solid) {
-    if (DIRS.some(([dx, dy, dz]) => { const nk = key(c.x + dx, c.y + dy, c.z + dz); return !solid.has(nk) && !coreKeys.has(nk); })) { depth.set(k, 0); q.push(c); }
+    if (DIRS.some(([dx, dy, dz]) => !solid.has(key(c.x + dx, c.y + dy, c.z + dz)))) { depth.set(k, 0); q.push(c); }
   }
   for (let i = 0; i < q.length; i++) {
     const c = q[i], d = depth.get(key(c.x, c.y, c.z));
@@ -409,7 +400,7 @@ function voxelize(W, H, D, inside, isCore, surface, interior) {
     const d = depth.get(k) ?? 0;
     cubes.push({ x: c.x, y: c.y, z: c.z, d, c: d === 0 ? surface(c.x, c.y, c.z) : interior(c.x, c.y, c.z, d) });
   }
-  return { W, H, D, cubes, core };
+  return { W, H, D, cubes };
 }
 
 /* ============================== Audio ============================== */
@@ -469,14 +460,14 @@ const audio = {
     };
     setTimeout(step, 1200);
   },
-  shot() { // a soft airy puff when a gun fires; throttled so streams of shots stay quiet
+  shot() { // a low, breathy puff when a gun fires: nothing above a few hundred hertz; throttled so streams stay quiet
     if (!this.ctx || this.muted) return;
-    const t = this.ctx.currentTime; if (t - this.lastShot < .06) return; this.lastShot = t;
+    const t = this.ctx.currentTime; if (t - this.lastShot < .07) return; this.lastShot = t;
     const n = this.ctx.createBufferSource(); n.buffer = this.noise;
-    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = .7; bp.frequency.setValueAtTime(1500, t); bp.frequency.exponentialRampToValueAtTime(450, t + .07);
-    n.connect(bp); this.env(bp, t, .05, .004, .07).connect(this.master); n.start(t); n.stop(t + .1);
-    const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(190, t + .05);
-    this.env(o, t, .035, .003, .05).connect(this.master); o.start(t); o.stop(t + .08);
+    const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = .9; lp.frequency.setValueAtTime(380, t); lp.frequency.exponentialRampToValueAtTime(150, t + .07);
+    n.connect(lp); this.env(lp, t, .09, .004, .07).connect(this.master); n.start(t); n.stop(t + .1);
+    const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(60, t + .06);
+    this.env(o, t, .07, .003, .07).connect(this.master); o.start(t); o.stop(t + .1);
   },
   pop(colorIdx, streak) { // low, round pop with a sub thump; the pitch walks a pentatonic loop in a low register
     if (!this.ctx || this.muted) return;
@@ -517,7 +508,12 @@ const audio = {
     const tr = this.ctx.createOscillator(); tr.type = 'triangle'; tr.frequency.setValueAtTime(190, t); tr.frequency.exponentialRampToValueAtTime(45, t + .35);
     const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500; tr.connect(lp);
     this.env(lp, t, .2, .004, .4).connect(this.master); tr.start(t); tr.stop(t + .5);
-    [0, 4, 7, 12].forEach((s, i) => this.note(392 * Math.pow(2, s / 12), t + .12 + i * .07, .07, .02, 1.4));
+    // a low gong rings out through the echo
+    const gg = this.ctx.createOscillator(); gg.type = 'sine'; gg.frequency.value = 65;
+    const vib = this.ctx.createOscillator(); vib.frequency.value = 5; const vg = this.ctx.createGain(); vg.gain.value = 2.5; vib.connect(vg).connect(gg.frequency);
+    this.env(gg, t + .05, .4, .02, 2.2).connect(this.echo); gg.start(t); gg.stop(t + 2.4); vib.start(t); vib.stop(t + 2.4);
+    const sub = this.ctx.createOscillator(); sub.type = 'sine'; sub.frequency.value = 41;
+    this.env(sub, t + .05, .35, .03, 1.2).connect(this.master); sub.start(t); sub.stop(t + 1.4);
   },
   whoosh() {
     if (!this.ctx || this.muted) return;
@@ -529,7 +525,7 @@ const audio = {
   chime() {
     if (!this.ctx || this.muted) return;
     const t0 = this.ctx.currentTime;
-    [0, 4, 7, 12, 16, 19, 24].forEach((s, i) => this.note(523.25 * Math.pow(2, s / 12), t0 + i * .09, .12, .01, 1.8));
+    [0, 4, 7, 12, 16].forEach((s, i) => this.note(196 * Math.pow(2, s / 12), t0 + i * .12, .11, .02, 2.2));
     const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(80, t0); o.frequency.exponentialRampToValueAtTime(30, t0 + .6);
     this.env(o, t0, .5, .004, .7).connect(this.master); o.start(t0); o.stop(t0 + .8);
   },
@@ -581,7 +577,6 @@ function roundedBox(size, radius, seg) {
 }
 const cubeGeo = roundedBox(1, .16, 3);
 const cubeMat = new THREE.MeshStandardMaterial({ roughness: .62, metalness: 0 });
-const coreMat = new THREE.MeshStandardMaterial({ color: 0xffcf52, roughness: .22, metalness: .75, emissive: 0xffb300, emissiveIntensity: 0 });
 
 // Particle pool (pop debris and confetti)
 const P_MAX = 420;
@@ -639,12 +634,12 @@ function flash(color) {
 }
 
 /* ============================== Game state ============================== */
-const FIRE_INTERVAL = .075, FLIGHT = .09, POP_TIME = .14;
+const FIRE_INTERVAL = .11, FLIGHT = .12, POP_TIME = .14;
 const COLS = 6, ROWS = 3, SLOTS = 5;
 const G = {
   levelIdx: store.get('level', 0) % LEVELS.length, level: null, state: 'menu', zen: store.get('zen', false),
   cubes: [], grid: new Map(), local: [], exposed: [], colorLeft: [], alive: 0, total: 0,
-  mesh: null, coreMesh: null, coreCenter: new THREE.Vector3(), pops: [],
+  mesh: null, pops: [],
   guns: [], rack: [], slots: [], slotCount: SLOTS, rescued: false,
   streak: 0, bestStreak: 0, lastPop: 0, stuckTimer: 0, timeScale: 1, slowT: 0, slowScale: 1, elapsed: 0, winTimer: -1,
   spin: 0, spinVel: 0, tilt: 0, dragging: false,
@@ -656,12 +651,11 @@ function loadLevel(idx) {
   const L = LEVELS[idx]; G.level = L;
   const data = L.build();
   if (G.mesh) { group.remove(G.mesh); G.mesh.dispose(); }
-  if (G.coreMesh) { group.remove(G.coreMesh); G.coreMesh.dispose(); }
   for (let i = 0; i < P_MAX; i++) { pLife[i] = 0; particles.setMatrixAt(i, ZERO); } particles.instanceMatrix.needsUpdate = true;
   inflight.length = 0; for (let i = 0; i < B_MAX; i++) bullets.setMatrixAt(i, ZERO); bullets.instanceMatrix.needsUpdate = true;
   for (const r of rings) { scene.remove(r.m); r.m.material.dispose(); } rings.length = 0;
 
-  const { W, H, D, cubes, core } = data;
+  const { W, H, D, cubes } = data;
   const maxDim = Math.max(W, H, D);
   const s = 10.5 / maxDim; // world units per voxel
   group.scale.setScalar(s);
@@ -679,16 +673,6 @@ function loadLevel(idx) {
     if (c.exposed) G.exposed[c.c].add(i);
   });
   group.add(G.mesh);
-
-  G.coreMesh = new THREE.InstancedMesh(cubeGeo, coreMat, core.length); G.coreMesh.frustumCulled = false;
-  G.coreCenter.set(0, 0, 0);
-  core.forEach((c, i) => {
-    const p = new THREE.Vector3(c.x + .5, c.y + .5, c.z + .5).add(off); G.coreCenter.add(p);
-    dummy.position.copy(p); dummy.scale.setScalar(CUBE * .97); dummy.updateMatrix(); G.coreMesh.setMatrixAt(i, dummy.matrix);
-  });
-  if (core.length) G.coreCenter.divideScalar(core.length);
-  coreMat.emissiveIntensity = 0; coreMat.color.set(PALETTE[L.coreColor]);
-  group.add(G.coreMesh);
 
   shadow.position.y = -objRadius * .78; shadow.scale.setScalar(objRadius * 2.6);
   G.alive = G.total = cubes.length; G.pops = [];
@@ -820,19 +804,30 @@ function recycleGun(g) { // Zen mode: a stuck gun goes back to the shortest rack
 }
 
 /* ---- Firing ---- */
+// A cube can only be shot when one of its open faces points at the camera: the front of the object.
+// The back waits for the turntable, or for the player to spin it round.
+const camLocal = new THREE.Vector3(), toCam = new THREE.Vector3();
+function visible(i) {
+  const c = G.cubes[i]; toCam.subVectors(camLocal, G.local[i]).normalize();
+  for (const [dx, dy, dz] of DIRS) {
+    const j = G.grid.get(key(c.x + dx, c.y + dy, c.z + dz));
+    if (j !== undefined && G.cubes[j].alive) continue;
+    if (dx * toCam.x + dy * toCam.y + dz * toCam.z > .3) return true;
+  }
+  return false;
+}
 function pickTarget(g) {
   const set = G.exposed[g.c]; if (!set.size) return -1;
-  let best = -1, bestScore = Infinity;
-  if (g.lastTarget) {
-    const t = g.lastTarget;
-    for (const i of set) { const c = G.cubes[i]; const d = Math.abs(c.x - t.x) + Math.abs(c.y - t.y) + Math.abs(c.z - t.z) + Math.random() * .6; if (d < bestScore) { bestScore = d; best = i; } }
-    if (bestScore > 6) best = -1; // the trail broke: sweep somewhere fresh, facing the camera
+  let best = -1, bestScore = Infinity, fallback = -1, n = 0;
+  const t = g.lastTarget;
+  for (const i of set) {
+    if (!visible(i)) continue;
+    if (fallback < 0 || Math.random() < 1 / ++n) fallback = i; // a random visible cube, for when the trail breaks
+    if (!t) continue;
+    const c = G.cubes[i]; const d = Math.abs(c.x - t.x) + Math.abs(c.y - t.y) + Math.abs(c.z - t.z) + Math.random() * .6;
+    if (d < bestScore) { bestScore = d; best = i; }
   }
-  if (best < 0) {
-    let n = 0; bestScore = -Infinity;
-    for (const i of set) { tmpV.copy(G.local[i]).applyMatrix4(group.matrixWorld); const z = tmpV.z + Math.random() * 1.5; if (z > bestScore) { bestScore = z; best = i; } if (++n > 40) break; }
-  }
-  return best;
+  return bestScore > 6 ? fallback : (best < 0 ? fallback : best);
 }
 function fire(g, i) {
   const c = G.cubes[i]; G.exposed[g.c].delete(i); c.claimed = true; c.exposed = false;
@@ -890,9 +885,9 @@ function updateProgress() {
 function win() {
   G.state = 'win'; G.winTimer = 0; G.timeScale = .3; G.slowT = 0; G.slowScale = 1;
   audio.chime(); buzz(40);
-  tmpV.copy(G.coreCenter).applyMatrix4(group.matrixWorld);
-  flash(PALETTE[G.level.coreColor]); ring(tmpV, PALETTE[G.level.coreColor], 9, 1.1);
-  const colors = G.level.colors.map(c => PALETTE[c]).concat(['#ffffff', PALETTE.gold]);
+  tmpV.set(0, 0, 0).applyMatrix4(group.matrixWorld);
+  flash('#ffffff'); ring(tmpV, '#ffffff', 9, 1.1);
+  const colors = G.level.colors.map(c => PALETTE[c]).concat(['#ffffff']);
   const n = reducedMotion ? 30 : 140;
   for (let k = 0; k < n; k++) {
     const vel = new THREE.Vector3(rnd(-1, 1), rnd(.6, 1.8), rnd(-1, 1)).normalize().multiplyScalar(rnd(4, 11));
@@ -956,7 +951,7 @@ function tick(now) {
   requestAnimationFrame(tick);
   let dt = Math.min(.05, (now - last) / 1000); last = now;
   const playing = G.state === 'play';
-  if (G.winTimer >= 0) { G.winTimer += dt; G.timeScale = G.winTimer < 1.6 ? .3 : 1; coreMat.emissiveIntensity = .35 + .35 * Math.sin(G.winTimer * 5); }
+  if (G.winTimer >= 0) { G.winTimer += dt; G.timeScale = G.winTimer < 1.6 ? .3 : 1; }
   else if (G.slowT > 0) { G.slowT -= dt; G.timeScale = G.slowScale; if (G.slowT <= 0) G.slowScale = 1; }
   else G.timeScale += (1 - G.timeScale) * Math.min(1, dt * 10);
   const sdt = dt * G.timeScale;
@@ -968,6 +963,7 @@ function tick(now) {
   group.rotation.set(G.tilt, G.spin, 0);
   group.position.y = Math.sin(now / 1000 * .9) * .12;
   group.updateMatrixWorld();
+  camLocal.copy(camera.position); group.worldToLocal(camLocal);
 
   // Guns fire from their holsters
   if (playing) {
@@ -975,7 +971,7 @@ function tick(now) {
       if (!g || g.ammo <= 0) continue;
       g.timer -= sdt; if (g.timer > 0) continue;
       const i = pickTarget(g);
-      if (i >= 0) { fire(g, i); g.timer = FIRE_INTERVAL; } else g.timer = .05;
+      if (i >= 0) { fire(g, i); g.timer = FIRE_INTERVAL; } else g.timer = .08;
     }
     const full = G.slots.every(Boolean);
     const canFire = G.slots.some(g => g && g.ammo > 0 && G.exposed[g.c].size > 0);
@@ -1021,7 +1017,7 @@ function buildLevelList() {
   const host = $('levelList'); host.replaceChildren();
   LEVELS.forEach((L, i) => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'level-card';
-    const sw = L.colors.map(c => `<i style="background:${PALETTE[c]}"></i>`).join('') + `<i style="background:${PALETTE[L.coreColor]}"></i><i style="background:${PALETTE[L.colors[1]]}"></i><i style="background:${PALETTE[L.colors[0]]}"></i>`;
+    const sw = L.colors.concat(L.colors.slice(0, 3)).map(c => `<i style="background:${PALETTE[c]}"></i>`).join('');
     const n = L.build().cubes.length;
     b.innerHTML = `<div class="swatches">${sw}</div><div><div class="t">${L.name}</div><div class="s">${L.tagline}</div></div><div class="n">${n} cubes</div>`;
     b.addEventListener('click', () => startLevel(i));
