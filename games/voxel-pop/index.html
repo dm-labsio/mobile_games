@@ -405,7 +405,7 @@ function voxelize(W, H, D, inside, surface, interior) {
 
 /* ============================== Audio ============================== */
 // Everything is synthesised: no files. Pops are low and round; a slow pentatonic melody drifts over a bass drone.
-const SCALE = [0, 2, 4, 7, 9, 12, 9, 7, 4, 2];
+const LOW = [0, 3, 5, 7, 5, 3];
 const MELODY = [0, 2, 4, 7, 9, 12, 14, 16];
 const audio = {
   ctx: null, master: null, muted: store.get('muted', false), lastPop: 0, lastShot: 0,
@@ -469,12 +469,12 @@ const audio = {
     const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(60, t + .06);
     this.env(o, t, .07, .003, .07).connect(this.master); o.start(t); o.stop(t + .1);
   },
-  pop(colorIdx, streak) { // low, round pop with a sub thump; the pitch walks a pentatonic loop in a low register
+  pop(colorIdx, streak) { // low, round pop with a sub thump; every colour and every streak step stays under 200 Hz
     if (!this.ctx || this.muted) return;
     const t = this.ctx.currentTime; if (t - this.lastPop < .03) return; this.lastPop = t;
-    const f = 150 * Math.pow(2, (colorIdx * 2 + SCALE[streak % SCALE.length]) / 12) * rnd(.985, 1.015);
+    const f = 95 * Math.pow(2, (colorIdx + LOW[streak % LOW.length]) / 12) * rnd(.985, 1.015);
     const o = this.ctx.createOscillator(); o.type = 'sine';
-    o.frequency.setValueAtTime(f * 1.6, t); o.frequency.exponentialRampToValueAtTime(f, t + .05);
+    o.frequency.setValueAtTime(f * 1.4, t); o.frequency.exponentialRampToValueAtTime(f, t + .05);
     this.env(o, t, .22, .004, .2).connect(this.master); o.start(t); o.stop(t + .25);
     const s = this.ctx.createOscillator(); s.type = 'sine'; s.frequency.setValueAtTime(75, t); s.frequency.exponentialRampToValueAtTime(42, t + .1);
     this.env(s, t, .3, .003, .12).connect(this.master); s.start(t); s.stop(t + .15);
@@ -500,32 +500,24 @@ const audio = {
     const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 400;
     n.connect(lp); this.env(lp, t, .16, .002, .08).connect(this.master); n.start(t); n.stop(t + .1);
   },
-  boom() { // a whole colour is finished: a deep boom and a rising shimmer
+  boom() { // a whole colour is finished: one soft thump, then a low chord in the melody's key washing through the echo
     if (!this.ctx || this.muted) return;
     const t = this.ctx.currentTime;
-    const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(28, t + .5);
-    this.env(o, t, .6, .004, .6).connect(this.master); o.start(t); o.stop(t + .7);
-    const tr = this.ctx.createOscillator(); tr.type = 'triangle'; tr.frequency.setValueAtTime(190, t); tr.frequency.exponentialRampToValueAtTime(45, t + .35);
-    const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500; tr.connect(lp);
-    this.env(lp, t, .2, .004, .4).connect(this.master); tr.start(t); tr.stop(t + .5);
-    // a low gong rings out through the echo
-    const gg = this.ctx.createOscillator(); gg.type = 'sine'; gg.frequency.value = 65;
-    const vib = this.ctx.createOscillator(); vib.frequency.value = 5; const vg = this.ctx.createGain(); vg.gain.value = 2.5; vib.connect(vg).connect(gg.frequency);
-    this.env(gg, t + .05, .4, .02, 2.2).connect(this.echo); gg.start(t); gg.stop(t + 2.4); vib.start(t); vib.stop(t + 2.4);
-    const sub = this.ctx.createOscillator(); sub.type = 'sine'; sub.frequency.value = 41;
-    this.env(sub, t + .05, .35, .03, 1.2).connect(this.master); sub.start(t); sub.stop(t + 1.4);
+    const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(48, t + .18);
+    this.env(o, t, .28, .004, .3).connect(this.master); o.start(t); o.stop(t + .35);
+    [130.8, 196, 261.6, 329.6].forEach((f, i) => this.note(f, t + .06 + i * .04, i < 2 ? .11 : .07, .08, 2.6));
   },
   whoosh() {
     if (!this.ctx || this.muted) return;
     const t = this.ctx.currentTime, n = this.ctx.createBufferSource(); n.buffer = this.noise;
     const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = .8;
-    bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(1800, t + .25);
+    bp.frequency.setValueAtTime(200, t); bp.frequency.exponentialRampToValueAtTime(700, t + .25);
     n.connect(bp); this.env(bp, t, .07, .08, .22).connect(this.master); n.start(t); n.stop(t + .32);
   },
   chime() {
     if (!this.ctx || this.muted) return;
     const t0 = this.ctx.currentTime;
-    [0, 4, 7, 12, 16].forEach((s, i) => this.note(196 * Math.pow(2, s / 12), t0 + i * .12, .11, .02, 2.2));
+    [0, 4, 7, 12, 16].forEach((s, i) => this.note(130.8 * Math.pow(2, s / 12), t0 + i * .12, .11, .02, 2.2));
     const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(80, t0); o.frequency.exponentialRampToValueAtTime(30, t0 + .6);
     this.env(o, t0, .5, .004, .7).connect(this.master); o.start(t0); o.stop(t0 + .8);
   },
@@ -585,7 +577,7 @@ particles.frustumCulled = false; scene.add(particles);
 const pPos = new Float32Array(P_MAX * 3), pVel = new Float32Array(P_MAX * 3), pLife = new Float32Array(P_MAX), pMax = new Float32Array(P_MAX), pSize = new Float32Array(P_MAX), pSpin = new Float32Array(P_MAX * 3);
 let pHead = 0;
 for (let i = 0; i < P_MAX; i++) particles.setColorAt(i, new THREE.Color(0xffffff));
-const dummy = new THREE.Object3D(), tmpV = new THREE.Vector3(), tmpC = new THREE.Color();
+const dummy = new THREE.Object3D(), tmpV = new THREE.Vector3(), tmpC = new THREE.Color(), WHITE = new THREE.Color(0xffffff);
 const ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
 function spawnParticle(pos, vel, color, life, size) {
   const i = pHead; pHead = (pHead + 1) % P_MAX;
@@ -608,9 +600,9 @@ function updateParticles(dt) {
 }
 for (let i = 0; i < P_MAX; i++) particles.setMatrixAt(i, ZERO);
 
-// Projectile pool
-const B_MAX = 80;
-const bullets = new THREE.InstancedMesh(new THREE.SphereGeometry(.5, 12, 10), new THREE.MeshStandardMaterial({ roughness: .3, emissive: 0xffffff, emissiveIntensity: .25 }), B_MAX);
+// Projectile pool: each pellet is a solid bright dot with two smaller dots trailing it
+const TRAIL = 3, B_MAX = 80 * TRAIL;
+const bullets = new THREE.InstancedMesh(new THREE.SphereGeometry(.5, 10, 8), new THREE.MeshBasicMaterial(), B_MAX);
 bullets.frustumCulled = false; scene.add(bullets);
 for (let i = 0; i < B_MAX; i++) { bullets.setColorAt(i, new THREE.Color(0xffffff)); bullets.setMatrixAt(i, ZERO); }
 const inflight = []; // {from:Vector3, cube, t, dur, color}
@@ -660,6 +652,7 @@ function loadLevel(idx) {
   const s = 10.5 / maxDim; // world units per voxel
   group.scale.setScalar(s);
   const off = new THREE.Vector3(-W / 2, -H / 2, -D / 2);
+  G.off = off; G.dims = { W, H, D };
   objRadius = Math.sqrt(W * W + H * H + D * D) / 2 * s * .92;
 
   G.cubes = cubes; G.grid = new Map(); G.local = []; G.exposed = L.colors.map(() => new Set()); G.colorLeft = L.colors.map(() => 0);
@@ -804,17 +797,35 @@ function recycleGun(g) { // Zen mode: a stuck gun goes back to the shortest rack
 }
 
 /* ---- Firing ---- */
-// A cube can only be shot when one of its open faces points at the camera: the front of the object.
-// The back waits for the turntable, or for the player to spin it round.
+// A cube can only be shot when the camera can actually see it: one of its open faces points at the camera
+// and no other cube sits on the line between them. The back waits for the turntable, or for a spin.
 const camLocal = new THREE.Vector3(), toCam = new THREE.Vector3();
 function visible(i) {
   const c = G.cubes[i]; toCam.subVectors(camLocal, G.local[i]).normalize();
+  let facing = false;
   for (const [dx, dy, dz] of DIRS) {
     const j = G.grid.get(key(c.x + dx, c.y + dy, c.z + dz));
     if (j !== undefined && G.cubes[j].alive) continue;
-    if (dx * toCam.x + dy * toCam.y + dz * toCam.z > .3) return true;
+    if (dx * toCam.x + dy * toCam.y + dz * toCam.z > .3) { facing = true; break; }
   }
-  return false;
+  return facing && lineOfSight(c);
+}
+function lineOfSight(c) { // walk the voxel grid from the cube towards the camera; any live cube on the way blocks it
+  const { W, H, D } = G.dims, x = c.x + .5, y = c.y + .5, z = c.z + .5;
+  let dx = camLocal.x - G.off.x - x, dy = camLocal.y - G.off.y - y, dz = camLocal.z - G.off.z - z;
+  const len = Math.hypot(dx, dy, dz); dx /= len; dy /= len; dz /= len;
+  let ix = c.x, iy = c.y, iz = c.z;
+  const sx = Math.sign(dx), sy = Math.sign(dy), sz = Math.sign(dz);
+  const tdx = dx ? Math.abs(1 / dx) : Infinity, tdy = dy ? Math.abs(1 / dy) : Infinity, tdz = dz ? Math.abs(1 / dz) : Infinity;
+  let tmx = dx > 0 ? (ix + 1 - x) / dx : dx < 0 ? (x - ix) / -dx : Infinity;
+  let tmy = dy > 0 ? (iy + 1 - y) / dy : dy < 0 ? (y - iy) / -dy : Infinity;
+  let tmz = dz > 0 ? (iz + 1 - z) / dz : dz < 0 ? (z - iz) / -dz : Infinity;
+  for (let n = 0; n < 64; n++) {
+    if (tmx < tmy && tmx < tmz) { ix += sx; tmx += tdx; } else if (tmy < tmz) { iy += sy; tmy += tdy; } else { iz += sz; tmz += tdz; }
+    if (ix < 0 || iy < 0 || iz < 0 || ix >= W || iy >= H || iz >= D) return true;
+    const j = G.grid.get(key(ix, iy, iz)); if (j !== undefined && G.cubes[j].alive) return false;
+  }
+  return true;
 }
 function pickTarget(g) {
   const set = G.exposed[g.c]; if (!set.size) return -1;
@@ -981,18 +992,22 @@ function tick(now) {
     if (!canFire && inflight.length === 0 && (full || (rackLeft && !canPick))) { G.stuckTimer += dt; if (G.stuckTimer > .9) stuck(); } else G.stuckTimer = 0;
   }
 
-  // Projectiles home in on their cube (the object keeps turning underneath them)
+  // Projectiles home in on their cube (the object keeps turning underneath them), lobbed in a small arc
   let bulletsDirty = inflight.length > 0;
   for (let k = inflight.length - 1; k >= 0; k--) {
     const b = inflight[k]; b.t += sdt / b.dur;
     tmpV.copy(G.local[b.cube]).applyMatrix4(group.matrixWorld);
     if (b.t >= 1) { inflight.splice(k, 1); popCube(b.cube, b.color); continue; }
-    const e = easeInOut(b.t); dummy.position.lerpVectors(b.from, tmpV, e); dummy.rotation.set(0, 0, 0);
-    dummy.scale.setScalar(.34 + .1 * Math.sin(b.t * Math.PI)); dummy.updateMatrix();
-    bullets.setMatrixAt(k, dummy.matrix); bullets.setColorAt(k, tmpC.set(b.color));
+    tmpC.set(b.color).lerp(WHITE, .3);
+    for (let s = 0; s < TRAIL; s++) {
+      const tt = Math.max(0, b.t - s * .11), e = easeInOut(tt);
+      dummy.position.lerpVectors(b.from, tmpV, e); dummy.position.y += Math.sin(tt * Math.PI) * .9; dummy.rotation.set(0, 0, 0);
+      dummy.scale.setScalar(s === 0 ? .24 : .17 - s * .04); dummy.updateMatrix();
+      bullets.setMatrixAt(k * TRAIL + s, dummy.matrix); bullets.setColorAt(k * TRAIL + s, tmpC);
+    }
   }
   if (bulletsDirty || bullets.userData.dirty) {
-    for (let k = inflight.length; k < B_MAX; k++) bullets.setMatrixAt(k, ZERO);
+    for (let k = inflight.length * TRAIL; k < B_MAX; k++) bullets.setMatrixAt(k, ZERO);
     bullets.instanceMatrix.needsUpdate = true; if (bullets.instanceColor) bullets.instanceColor.needsUpdate = true;
     bullets.userData.dirty = bulletsDirty;
   }
