@@ -6,46 +6,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@600;800&family=Silkscreen:wght@400;700&display=swap">
 <style>
-/* Layout: one-screen app. The 3D stage fills the screen; a thin HUD floats at the top; the holsters and the gun rack dock at the bottom. */
+/* Layout: one-screen app. The 3D stage fills the screen; a thin HUD floats at the top; the holsters and the gun rack dock at the bottom.
+   One deliberate look: a dark arcade night, neon colours, pixel labels. */
 :root {
-  --bg-a: #fbe7dc;        /* peach mist */
-  --bg-b: #e4e3ff;        /* lilac haze */
-  --fg: #352d4b;          /* plum ink */
-  --muted: #8a80a6;
-  --panel: rgba(255, 255, 255, 0.62);
-  --panel-strong: rgba(255, 255, 255, 0.86);
-  --line: rgba(53, 45, 75, 0.12);
-  --slot: rgba(255, 255, 255, 0.5);
-  --chain: #8d8aa3;
-  --accent: #ff8fab;      /* rose */
-  --accent-ink: #4d1a2d;
-  --shadow: 0 12px 32px rgba(80, 60, 120, 0.18);
-  --font-display: 'Fredoka', 'Nunito', system-ui, sans-serif;
-  --font-ui: 'Nunito', system-ui, -apple-system, sans-serif;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg-a: #1d1a3c; --bg-b: #35204f; --fg: #f4eefc; --muted: #ab9fc9;
-    --panel: rgba(32, 26, 60, 0.66); --panel-strong: rgba(36, 29, 66, 0.92);
-    --line: rgba(255, 255, 255, 0.12); --slot: rgba(255, 255, 255, 0.08); --chain: #a6a2c4;
-    --accent: #ff8fab; --accent-ink: #4d1a2d; --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg-a: #1d1a3c; --bg-b: #35204f; --fg: #f4eefc; --muted: #ab9fc9;
-  --panel: rgba(32, 26, 60, 0.66); --panel-strong: rgba(36, 29, 66, 0.92);
-  --line: rgba(255, 255, 255, 0.12); --slot: rgba(255, 255, 255, 0.08); --chain: #a6a2c4;
-  --accent: #ff8fab; --accent-ink: #4d1a2d; --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
   color-scheme: dark;
+  --bg-a: #0b0a22;        /* midnight */
+  --bg-b: #221043;        /* deep violet */
+  --fg: #f2f0ff;
+  --muted: #9a93c7;
+  --panel: rgba(24, 16, 56, 0.72);
+  --panel-strong: rgba(22, 14, 52, 0.94);
+  --line: rgba(255, 255, 255, 0.14);
+  --slot: rgba(255, 255, 255, 0.05);
+  --chain: #8f8ab8;
+  --accent: #ff3d9a;      /* hot pink */
+  --accent-2: #3df2ff;    /* electric cyan */
+  --accent-ink: #2a0618;
+  --glow: 0 0 10px;
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --font-display: 'Fredoka', 'Nunito', system-ui, sans-serif;
+  --font-pixel: 'Silkscreen', 'Courier New', monospace;
+  --font-ui: 'Nunito', system-ui, -apple-system, sans-serif;
 }
 
 html, body { height: 100%; }
 body {
   margin: 0; overflow: hidden;
-  background: linear-gradient(160deg, var(--bg-a), var(--bg-b));
+  background: radial-gradient(ellipse at 50% 30%, var(--bg-b), var(--bg-a) 70%);
   color: var(--fg); font-family: var(--font-ui); font-size: 15px;
   -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
   touch-action: none; overscroll-behavior: none;
@@ -75,10 +64,10 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
 }
 .icon-btn:active { transform: scale(.92); }
 .icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.progress { flex: 1; min-width: 0; height: 14px; border-radius: 999px; background: var(--slot); border: 1px solid var(--line); overflow: hidden; }
-.progress-fill { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, #ffb169, #ff8fab, #b394ff); transition: width .2s ease-out; }
-.count { font-family: var(--font-display); font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; min-width: 3.5ch; text-align: right; color: var(--muted); }
-.level-name { text-align: center; font-family: var(--font-display); font-weight: 500; font-size: 15px; color: var(--muted); margin-top: 6px; letter-spacing: .02em; }
+.progress { flex: 1; min-width: 0; height: 12px; border-radius: 999px; background: var(--slot); border: 1px solid var(--line); overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, var(--accent-2), var(--accent), #b23dff); box-shadow: var(--glow) var(--accent); transition: width .2s ease-out; }
+.count { font-family: var(--font-pixel); font-size: 13px; font-variant-numeric: tabular-nums; min-width: 4.5ch; text-align: right; color: var(--accent-2); text-shadow: var(--glow) var(--accent-2); }
+.level-name { text-align: center; font-family: var(--font-pixel); font-size: 11px; color: var(--muted); margin-top: 8px; letter-spacing: .08em; text-transform: uppercase; }
 
 /* ---- Dock: holster slots + gun rack ---- */
 #dock { bottom: 0; padding-block: 0 calc(10px + env(safe-area-inset-bottom, 0px)); pointer-events: none; }
@@ -88,7 +77,7 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
   width: 58px; height: 84px; border-radius: 20px; background: var(--slot); border: 2px dashed var(--line);
   display: grid; place-items: center; transition: border-color .25s, background .25s, transform .25s cubic-bezier(.22,1.3,.36,1);
 }
-.slot.full { border-style: solid; border-color: transparent; background: var(--panel); box-shadow: var(--shadow); }
+.slot.full { border-style: solid; border-color: rgba(61, 242, 255, .35); background: var(--panel); box-shadow: var(--shadow), 0 0 14px rgba(61, 242, 255, .25), inset 0 0 12px rgba(61, 242, 255, .08); }
 .slot.pop { animation: slot-pop .3s cubic-bezier(.22,1.5,.36,1); }
 @keyframes slot-pop { 0% { transform: scale(.88); } 100% { transform: scale(1); } }
 
@@ -96,7 +85,8 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
   pointer-events: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 26px;
   padding: 8px 12px 10px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow);
 }
-.rack-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.rack-head { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-pixel); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.rack-head b { color: var(--accent-2); font-weight: 400; }
 .rack-head b { font-variant-numeric: tabular-nums; }
 .rack-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px 6px; justify-items: center; }
 .cell { width: 44px; height: 66px; }
@@ -107,34 +97,39 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
   display: grid; place-items: end center; cursor: pointer; border: 0; background: none; padding: 0;
   transition: opacity .25s; will-change: transform;
 }
-/* A gun is a chubby little cannon pot: a rounded body with a dark rim on top and two eyes, like the colour itself has a face. */
+/* A gun is a pixel-art cannon pot, 9 x 10 pixels at 4px each: the sprite is one element whose box-shadow paints every pixel.
+   Colours come from the gun's --c, so one rule draws every gun. */
 .gun-body {
-  position: relative; width: 40px; height: 38px; border-radius: 11px 11px 15px 15px; margin-bottom: 8px;
-  background: linear-gradient(180deg, color-mix(in oklab, var(--c) 68%, white) 0%, var(--c) 45%, color-mix(in oklab, var(--c) 80%, black) 100%);
-  box-shadow: inset 0 -5px 8px rgba(0,0,0,.12), inset 0 3px 5px rgba(255,255,255,.35), 0 7px 14px color-mix(in srgb, var(--c) 45%, transparent);
+  position: relative; width: 36px; height: 40px; margin-bottom: 8px;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c) 70%, transparent));
   transition: transform .25s cubic-bezier(.22,1.3,.36,1), opacity .25s, filter .25s;
 }
-.gun-body::before { /* the rim of the barrel */
-  content: ""; position: absolute; top: -6px; left: 4px; right: 4px; height: 11px; border-radius: 6px;
-  background: linear-gradient(180deg, color-mix(in oklab, var(--c) 45%, #2a2340), color-mix(in oklab, var(--c) 70%, #2a2340));
-  box-shadow: inset 0 2px 2px rgba(255,255,255,.18), 0 2px 3px rgba(0,0,0,.2);
+.px {
+  --o: #120c24;                                        /* outline */
+  --l: color-mix(in oklab, var(--c) 55%, white);       /* highlight */
+  --d: color-mix(in oklab, var(--c) 70%, black);       /* shade */
+  --r: color-mix(in oklab, var(--c) 35%, #120c24);     /* rim */
+  position: absolute; left: 0; top: 0; width: 4px; height: 4px; background: transparent;
+  box-shadow:
+    /* row 0: rim top */    8px 0 var(--o), 12px 0 var(--o), 16px 0 var(--o), 20px 0 var(--o), 24px 0 var(--o),
+    /* row 1: rim */        4px 4px var(--o), 8px 4px var(--r), 12px 4px var(--r), 16px 4px var(--r), 20px 4px var(--r), 24px 4px var(--r), 28px 4px var(--o),
+    /* row 2 */             0 8px var(--o), 4px 8px var(--l), 8px 8px var(--c), 12px 8px var(--c), 16px 8px var(--c), 20px 8px var(--c), 24px 8px var(--c), 28px 8px var(--c), 32px 8px var(--o),
+    /* row 3: eyes */       0 12px var(--o), 4px 12px var(--l), 8px 12px var(--c), 12px 12px #fff, 16px 12px var(--c), 20px 12px var(--c), 24px 12px #fff, 28px 12px var(--c), 32px 12px var(--o),
+    /* row 4: pupils */     0 16px var(--o), 4px 16px var(--l), 8px 16px var(--c), 12px 16px var(--o), 16px 16px var(--c), 20px 16px var(--c), 24px 16px var(--o), 28px 16px var(--c), 32px 16px var(--o),
+    /* row 5 */             0 20px var(--o), 4px 20px var(--l), 8px 20px var(--c), 12px 20px var(--c), 16px 20px var(--c), 20px 20px var(--c), 24px 20px var(--c), 28px 20px var(--c), 32px 20px var(--o),
+    /* row 6 */             0 24px var(--o), 4px 24px var(--c), 8px 24px var(--c), 12px 24px var(--c), 16px 24px var(--c), 20px 24px var(--c), 24px 24px var(--c), 28px 24px var(--d), 32px 24px var(--o),
+    /* row 7 */             0 28px var(--o), 4px 28px var(--d), 8px 28px var(--c), 12px 28px var(--c), 16px 28px var(--c), 20px 28px var(--c), 24px 28px var(--d), 28px 28px var(--d), 32px 28px var(--o),
+    /* row 8 */             4px 32px var(--o), 8px 32px var(--d), 12px 32px var(--d), 16px 32px var(--d), 20px 32px var(--d), 24px 32px var(--d), 28px 32px var(--o),
+    /* row 9: base */       8px 36px var(--o), 12px 36px var(--o), 16px 36px var(--o), 20px 36px var(--o), 24px 36px var(--o);
 }
-.gun-body::after { /* two eyes */
-  content: ""; position: absolute; top: 14px; left: 9px; width: 8px; height: 9px; border-radius: 50%;
-  background: radial-gradient(circle at 50% 58%, #2a2340 0 2.3px, #fff 2.8px);
-  box-shadow: 14px 0 0 0 transparent; -webkit-box-shadow: none;
-  background-repeat: no-repeat;
-}
-.gun-body .eye2 { position: absolute; top: 14px; left: 23px; width: 8px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 50% 58%, #2a2340 0 2.3px, #fff 2.8px); }
 .ammo {
-  position: absolute; left: 50%; bottom: -3px; transform: translateX(-50%); min-width: 24px; padding: 1px 6px; border-radius: 999px;
-  background: var(--panel-strong); color: var(--fg); font-family: var(--font-display); font-weight: 600; font-size: 13px; text-align: center;
-  font-variant-numeric: tabular-nums; box-shadow: 0 2px 6px rgba(0,0,0,.15); border: 1px solid var(--line); z-index: 2;
+  position: absolute; left: 50%; bottom: -3px; transform: translateX(-50%); min-width: 24px; padding: 2px 5px 1px; border-radius: 4px;
+  background: var(--panel-strong); color: var(--fg); font-family: var(--font-pixel); font-size: 11px; text-align: center; line-height: 1.2;
+  font-variant-numeric: tabular-nums; box-shadow: 0 2px 6px rgba(0,0,0,.3); border: 1px solid var(--line); z-index: 2;
 }
 .ammo.bump { animation: bump .14s ease-out; }
 @keyframes bump { 40% { transform: translateX(-50%) scale(1.22); } }
-.gun.queued .gun-body { transform: scale(.8) translateY(6px); opacity: .45; filter: saturate(.7); }
-.gun.queued .gun-body::after, .gun.queued .eye2 { opacity: .5; }
+.gun.queued .gun-body { transform: scale(.8) translateY(6px); opacity: .4; filter: saturate(.6); }
 .gun.ready .gun-body { transform: translateY(-2px); }
 .gun.ready:active .gun-body { transform: translateY(2px) scale(.96); }
 .gun.fire .gun-body { animation: kick .09s ease-out; }
@@ -144,8 +139,8 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
 .gun.shake { animation: shake .35s ease-in-out; }
 @keyframes shake { 20% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 80% { transform: translateX(-2px); } }
 /* chained pair: a bar links the two guns; linked guns also wear a grey collar */
-.gun.linked .gun-body { box-shadow: inset 0 -5px 8px rgba(0,0,0,.12), inset 0 3px 5px rgba(255,255,255,.35), 0 0 0 3px var(--chain), 0 7px 14px color-mix(in srgb, var(--c) 45%, transparent); }
-.gun.chain-right::after { content: ""; position: absolute; left: 100%; top: 44%; width: 22px; height: 9px; margin-left: -6px; border-radius: 5px; background: var(--chain); box-shadow: inset 0 -2px 0 rgba(0,0,0,.25); z-index: 0; }
+.gun.linked .px { --o: var(--chain); }
+.gun.chain-right::after { content: ""; position: absolute; left: 100%; top: 44%; width: 22px; height: 8px; margin-left: -6px; background: repeating-linear-gradient(90deg, var(--chain) 0 4px, transparent 4px 6px); z-index: 0; }
 
 /* ---- Overlays ---- */
 #overlay { inset: 0; display: flex; flex-direction: column; align-items: center; overflow-y: auto; padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)); background: rgba(20, 14, 40, .18); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
@@ -156,10 +151,10 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
 }
 @keyframes rise { from { transform: translateY(18px) scale(.97); opacity: 0; } }
 .panel h1, .panel h2 { font-family: var(--font-display); font-weight: 600; margin: 0; text-wrap: balance; }
-.panel h1 { font-size: 40px; letter-spacing: -.01em; line-height: 1; }
-.panel h2 { font-size: 28px; }
+.panel h1 { font-size: 40px; letter-spacing: -.01em; line-height: 1; color: #fff; text-shadow: 0 0 12px var(--accent), 0 0 32px color-mix(in srgb, var(--accent) 60%, transparent); }
+.panel h2 { font-size: 28px; color: #fff; text-shadow: 0 0 12px var(--accent-2); }
 .panel p { margin: 8px 0 0; color: var(--muted); line-height: 1.45; }
-.panel .eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.panel .eyebrow { font-family: var(--font-pixel); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-2); text-shadow: var(--glow) var(--accent-2); margin-bottom: 8px; }
 .levels { display: grid; gap: 10px; margin-top: 18px; }
 .level-card {
   display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 12px; text-align: left;
@@ -180,7 +175,7 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
   transition: transform .15s cubic-bezier(.22,1.3,.36,1), background .2s;
 }
 .btn:active { transform: scale(.96); }
-.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 45%, transparent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 70%, transparent), 0 8px 20px rgba(0,0,0,.3); }
 .btn[disabled] { opacity: .6; cursor: default; }
 .switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding: 12px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); }
 .switch label { font-weight: 800; }
@@ -191,7 +186,7 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
 .toggle[aria-checked="true"]::after { transform: translateX(20px); }
 .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 16px; }
 .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 10px; text-align: center; }
-.stat b { display: block; font-family: var(--font-display); font-weight: 600; font-size: 22px; font-variant-numeric: tabular-nums; }
+.stat b { display: block; font-family: var(--font-pixel); font-size: 18px; font-variant-numeric: tabular-nums; color: var(--accent-2); text-shadow: var(--glow) var(--accent-2); }
 .stat span { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .note { font-size: 12px; color: var(--muted); margin-top: 12px; }
 .rules { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
@@ -239,8 +234,8 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
     <h1>Voxel Pop</h1>
     <p>Peel a voxel object layer by layer until nothing is left.</p>
     <ul class="rules">
-      <li><i style="background:#ff8fab"></i><span><b>Front row only.</b> Tap a gun in the top row of the rack to holster it. The gun behind it moves up.</span></li>
-      <li><i style="background:#6fc3ff"></i><span><b>Guns only hit what faces them.</b> Cubes on the back wait for the turntable, or spin the object yourself. A gun whose colour isn't showing waits in its holster. Five waiting guns and you're stuck.</span></li>
+      <li><i style="background:#ff3d9a"></i><span><b>Front row only.</b> Tap a gun in the top row of the rack to holster it. The gun behind it moves up.</span></li>
+      <li><i style="background:#3df2ff"></i><span><b>Guns only hit what faces them.</b> Cubes on the back wait for the turntable, or spin the object yourself. A gun whose colour isn't showing waits in its holster. Five waiting guns and you're stuck.</span></li>
       <li><i style="background:#8d8aa3"></i><span><b>Chained pairs</b> go together: both must be in the front row, and you need two free holsters.</span></li>
     </ul>
     <div id="levelList" class="levels"></div>
@@ -303,9 +298,10 @@ const store = {
 };
 
 /* ============================== Palette ============================== */
+// Neon: every colour sits near full saturation so it glows against the dark stage.
 const PALETTE = {
-  coral: '#ff7a8a', peach: '#ffb169', lemon: '#ffe36e', mint: '#6fe0b5', sky: '#6fc3ff', lilac: '#b394ff',
-  rose: '#ff9bd2', berry: '#e8507a', wood: '#c07f4e', cocoa: '#7a4a2c', gold: '#ffcf52', cream: '#fff1d6',
+  coral: '#ff3d7f', peach: '#ff8a2b', lemon: '#f4ff3d', mint: '#2dffb0', sky: '#2fd4ff', lilac: '#a44dff',
+  rose: '#ff5ae0', berry: '#ff1f5a', wood: '#ffa31f', cocoa: '#c2186b', gold: '#ffe600', cream: '#e6fbff',
 };
 
 /* ============================== Levels ============================== */
@@ -315,7 +311,7 @@ const PALETTE = {
 const LEVELS = [
   {
     id: 'chest', name: 'Treasure Chest', title: 'Gone!', tagline: 'Planks outside, stripes inside.',
-    colors: ['wood', 'cocoa', 'gold', 'mint', 'sky', 'coral'],
+    colors: ['wood', 'cocoa', 'lilac', 'mint', 'sky', 'lemon'],
     build() {
       const W = 14, D = 9, HB = 6, HL = 4, H = HB + HL;
       const inside = (x, y, z) => {
@@ -546,20 +542,24 @@ renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
 renderer.setClearColor(0x000000, 0);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, 1, .1, 200);
-scene.add(new THREE.HemisphereLight(0xffffff, 0xd9c3ff, 1.25));
-const sun = new THREE.DirectionalLight(0xfff1e0, 1.6); sun.position.set(5, 9, 7); scene.add(sun);
-const fill = new THREE.DirectionalLight(0xcfe4ff, .5); fill.position.set(-6, 2, -4); scene.add(fill);
+scene.add(new THREE.HemisphereLight(0xdde6ff, 0x5a2a8a, 1.4));
+const sun = new THREE.DirectionalLight(0xffffff, 1.8); sun.position.set(5, 9, 7); scene.add(sun);
+const fill = new THREE.DirectionalLight(0x7fe9ff, .7); fill.position.set(-6, 2, -4); scene.add(fill);
+const rim = new THREE.DirectionalLight(0xff3d9a, .6); rim.position.set(0, -3, -8); scene.add(rim);
 
 const group = new THREE.Group(); scene.add(group);
 let objRadius = 6;
 
-// Soft shadow blob under the object
+// A glowing grid floor under the object, fading out towards its edges
 const shadowTex = (() => {
-  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
-  const r = g.createRadialGradient(128, 128, 10, 128, 128, 128); r.addColorStop(0, 'rgba(60,40,90,.35)'); r.addColorStop(1, 'rgba(60,40,90,0)');
-  g.fillStyle = r; g.fillRect(0, 0, 256, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d');
+  g.strokeStyle = 'rgba(61,242,255,.9)'; g.lineWidth = 2;
+  for (let i = 0; i <= 512; i += 32) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 512); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(512, i); g.stroke(); }
+  g.globalCompositeOperation = 'destination-in';
+  const r = g.createRadialGradient(256, 256, 40, 256, 256, 256); r.addColorStop(0, 'rgba(0,0,0,.9)'); r.addColorStop(.55, 'rgba(0,0,0,.35)'); r.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 512, 512); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 })();
-const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false }));
+const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .55 }));
 shadow.rotation.x = -Math.PI / 2; scene.add(shadow);
 
 function roundedBox(size, radius, seg) {
@@ -574,7 +574,10 @@ function roundedBox(size, radius, seg) {
   return g;
 }
 const cubeGeo = roundedBox(1, .16, 3);
-const cubeMat = new THREE.MeshStandardMaterial({ roughness: .62, metalness: 0 });
+const cubeMat = new THREE.MeshStandardMaterial({ roughness: .5, metalness: 0 });
+// A soft halo: the same cubes drawn again slightly larger, additive and faint, sharing the live instance buffers
+const haloGeo = roundedBox(1.16, .22, 2);
+const haloMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: .2, blending: THREE.AdditiveBlending, depthWrite: false });
 
 // Particle pool (pop debris and confetti)
 const P_MAX = 420;
@@ -637,7 +640,7 @@ const COLS = 6, ROWS = 3, SLOTS = 5;
 const G = {
   levelIdx: store.get('level', 0) % LEVELS.length, level: null, state: 'menu', zen: store.get('zen', false),
   cubes: [], grid: new Map(), local: [], exposed: [], colorLeft: [], alive: 0, total: 0,
-  mesh: null, pops: [],
+  mesh: null, halo: null, pops: [],
   guns: [], rack: [], slots: [], slotCount: SLOTS, rescued: false,
   streak: 0, bestStreak: 0, lastPop: 0, stuckTimer: 0, timeScale: 1, slowT: 0, slowScale: 1, elapsed: 0, winTimer: -1,
   spin: 0, spinVel: 0, tilt: 0, dragging: false,
@@ -649,6 +652,7 @@ function loadLevel(idx) {
   const L = LEVELS[idx]; G.level = L;
   const data = L.build();
   if (G.mesh) { group.remove(G.mesh); G.mesh.dispose(); }
+  if (G.halo) { group.remove(G.halo); G.halo.dispose(); }
   for (let i = 0; i < P_MAX; i++) { pLife[i] = 0; particles.setMatrixAt(i, ZERO); } particles.instanceMatrix.needsUpdate = true;
   inflight.length = 0; for (let i = 0; i < B_MAX; i++) bullets.setMatrixAt(i, ZERO); bullets.instanceMatrix.needsUpdate = true;
   for (const r of rings) { scene.remove(r.m); r.m.material.dispose(); } rings.length = 0;
@@ -672,8 +676,11 @@ function loadLevel(idx) {
     if (c.exposed) G.exposed[c.c].add(i);
   });
   group.add(G.mesh);
+  G.halo = new THREE.InstancedMesh(haloGeo, haloMat, cubes.length); G.halo.frustumCulled = false;
+  G.halo.instanceMatrix = G.mesh.instanceMatrix; G.halo.instanceColor = G.mesh.instanceColor;
+  group.add(G.halo);
 
-  shadow.position.y = -objRadius * .78; shadow.scale.setScalar(objRadius * 2.6);
+  shadow.position.y = -objRadius * .78; shadow.scale.setScalar(objRadius * 3.2);
   G.alive = G.total = cubes.length; G.pops = [];
   G.streak = 0; G.bestStreak = 0; G.elapsed = 0; G.winTimer = -1; G.timeScale = 1; G.slowT = 0; G.stuckTimer = 0; G.rescued = false;
   G.slotCount = SLOTS; G.tilt = 0;
@@ -718,7 +725,7 @@ function gunEl(g) {
   const el = document.createElement('button'); el.className = 'gun'; el.type = 'button';
   el.style.setProperty('--c', PALETTE[G.level.colors[g.c]]);
   el.setAttribute('aria-label', `${G.level.colors[g.c]} gun, ${g.ammo} shots`);
-  el.innerHTML = `<div class="gun-body"><i class="eye2"></i></div><span class="ammo">${g.ammo}</span>`;
+  el.innerHTML = `<div class="gun-body"><i class="px"></i></div><span class="ammo">${g.ammo}</span>`;
   el.addEventListener('click', () => tryPlace(g));
   return el;
 }
