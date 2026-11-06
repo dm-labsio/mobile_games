@@ -107,19 +107,25 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
   display: grid; place-items: end center; cursor: pointer; border: 0; background: none; padding: 0;
   transition: opacity .25s; will-change: transform;
 }
+/* A gun is a chubby little cannon pot: a rounded body with a dark rim on top and two eyes, like the colour itself has a face. */
 .gun-body {
-  position: relative; width: 32px; height: 50px; border-radius: 16px 16px 12px 12px;
-  background: linear-gradient(180deg, color-mix(in oklab, var(--c) 62%, white) 0%, var(--c) 42%, color-mix(in oklab, var(--c) 78%, black) 100%);
-  box-shadow: inset 0 -5px 10px rgba(0,0,0,.12), inset 0 3px 6px rgba(255,255,255,.35), 0 8px 16px color-mix(in srgb, var(--c) 45%, transparent);
+  position: relative; width: 40px; height: 38px; border-radius: 11px 11px 15px 15px; margin-bottom: 8px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--c) 68%, white) 0%, var(--c) 45%, color-mix(in oklab, var(--c) 80%, black) 100%);
+  box-shadow: inset 0 -5px 8px rgba(0,0,0,.12), inset 0 3px 5px rgba(255,255,255,.35), 0 7px 14px color-mix(in srgb, var(--c) 45%, transparent);
   transition: transform .25s cubic-bezier(.22,1.3,.36,1), opacity .25s, filter .25s;
 }
-.gun-body::before { /* nozzle */
-  content: ""; position: absolute; top: -6px; left: 50%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%;
-  background: color-mix(in oklab, var(--c) 55%, #2a2340); box-shadow: inset 0 2px 3px rgba(0,0,0,.35);
+.gun-body::before { /* the rim of the barrel */
+  content: ""; position: absolute; top: -6px; left: 4px; right: 4px; height: 11px; border-radius: 6px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--c) 45%, #2a2340), color-mix(in oklab, var(--c) 70%, #2a2340));
+  box-shadow: inset 0 2px 2px rgba(255,255,255,.18), 0 2px 3px rgba(0,0,0,.2);
 }
-.gun-body::after { /* glossy highlight */
-  content: ""; position: absolute; top: 9px; left: 6px; width: 6px; height: 20px; border-radius: 6px; background: rgba(255,255,255,.45);
+.gun-body::after { /* two eyes */
+  content: ""; position: absolute; top: 14px; left: 9px; width: 8px; height: 9px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 58%, #2a2340 0 2.3px, #fff 2.8px);
+  box-shadow: 14px 0 0 0 transparent; -webkit-box-shadow: none;
+  background-repeat: no-repeat;
 }
+.gun-body .eye2 { position: absolute; top: 14px; left: 23px; width: 8px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 50% 58%, #2a2340 0 2.3px, #fff 2.8px); }
 .ammo {
   position: absolute; left: 50%; bottom: -3px; transform: translateX(-50%); min-width: 24px; padding: 1px 6px; border-radius: 999px;
   background: var(--panel-strong); color: var(--fg); font-family: var(--font-display); font-weight: 600; font-size: 13px; text-align: center;
@@ -128,6 +134,7 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
 .ammo.bump { animation: bump .14s ease-out; }
 @keyframes bump { 40% { transform: translateX(-50%) scale(1.22); } }
 .gun.queued .gun-body { transform: scale(.8) translateY(6px); opacity: .45; filter: saturate(.7); }
+.gun.queued .gun-body::after, .gun.queued .eye2 { opacity: .5; }
 .gun.ready .gun-body { transform: translateY(-2px); }
 .gun.ready:active .gun-body { transform: translateY(2px) scale(.96); }
 .gun.fire .gun-body { animation: kick .09s ease-out; }
@@ -137,7 +144,7 @@ button:focus-visible, .gun:focus-visible { outline: 3px solid var(--accent); out
 .gun.shake { animation: shake .35s ease-in-out; }
 @keyframes shake { 20% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 80% { transform: translateX(-2px); } }
 /* chained pair: a bar links the two guns; linked guns also wear a grey collar */
-.gun.linked .gun-body::before { box-shadow: inset 0 2px 3px rgba(0,0,0,.35), 0 0 0 3px var(--chain); }
+.gun.linked .gun-body { box-shadow: inset 0 -5px 8px rgba(0,0,0,.12), inset 0 3px 5px rgba(255,255,255,.35), 0 0 0 3px var(--chain), 0 7px 14px color-mix(in srgb, var(--c) 45%, transparent); }
 .gun.chain-right::after { content: ""; position: absolute; left: 100%; top: 44%; width: 22px; height: 9px; margin-left: -6px; border-radius: 5px; background: var(--chain); box-shadow: inset 0 -2px 0 rgba(0,0,0,.25); z-index: 0; }
 
 /* ---- Overlays ---- */
@@ -500,12 +507,11 @@ const audio = {
     const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 400;
     n.connect(lp); this.env(lp, t, .16, .002, .08).connect(this.master); n.start(t); n.stop(t + .1);
   },
-  boom() { // a whole colour is finished: one soft thump, then a low chord in the melody's key washing through the echo
+  boom() { // a whole colour is finished: almost silent, just a soft low thump under the slow-motion
     if (!this.ctx || this.muted) return;
     const t = this.ctx.currentTime;
-    const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(48, t + .18);
-    this.env(o, t, .28, .004, .3).connect(this.master); o.start(t); o.stop(t + .35);
-    [130.8, 196, 261.6, 329.6].forEach((f, i) => this.note(f, t + .06 + i * .04, i < 2 ? .11 : .07, .08, 2.6));
+    const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(100, t); o.frequency.exponentialRampToValueAtTime(50, t + .2);
+    this.env(o, t, .12, .01, .35).connect(this.master); o.start(t); o.stop(t + .4);
   },
   whoosh() {
     if (!this.ctx || this.muted) return;
@@ -712,7 +718,7 @@ function gunEl(g) {
   const el = document.createElement('button'); el.className = 'gun'; el.type = 'button';
   el.style.setProperty('--c', PALETTE[G.level.colors[g.c]]);
   el.setAttribute('aria-label', `${G.level.colors[g.c]} gun, ${g.ammo} shots`);
-  el.innerHTML = `<div class="gun-body"></div><span class="ammo">${g.ammo}</span>`;
+  el.innerHTML = `<div class="gun-body"><i class="eye2"></i></div><span class="ammo">${g.ammo}</span>`;
   el.addEventListener('click', () => tryPlace(g));
   return el;
 }
@@ -806,7 +812,7 @@ function visible(i) {
   for (const [dx, dy, dz] of DIRS) {
     const j = G.grid.get(key(c.x + dx, c.y + dy, c.z + dz));
     if (j !== undefined && G.cubes[j].alive) continue;
-    if (dx * toCam.x + dy * toCam.y + dz * toCam.z > .3) { facing = true; break; }
+    if (dx * toCam.x + dy * toCam.y + dz * toCam.z > .04) { facing = true; break; }
   }
   return facing && lineOfSight(c);
 }
