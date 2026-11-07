@@ -635,7 +635,7 @@ function flash(color) {
 }
 
 /* ============================== Game state ============================== */
-const FIRE_INTERVAL = .11, FLIGHT = .12, POP_TIME = .14;
+const FIRE_INTERVAL = .085, FLIGHT = .1, POP_TIME = .14;
 const COLS = 6, ROWS = 3, SLOTS = 5;
 const G = {
   levelIdx: store.get('level', 0) % LEVELS.length, level: null, state: 'menu', zen: store.get('zen', false),
@@ -643,7 +643,7 @@ const G = {
   mesh: null, halo: null, pops: [],
   guns: [], rack: [], slots: [], slotCount: SLOTS, rescued: false,
   streak: 0, bestStreak: 0, lastPop: 0, stuckTimer: 0, timeScale: 1, slowT: 0, slowScale: 1, elapsed: 0, winTimer: -1,
-  spin: 0, spinVel: 0, tilt: 0, dragging: false,
+  quat: new THREE.Quaternion(), angVel: new THREE.Vector3(), dragging: false,
 };
 const CUBE = 1;
 
@@ -683,7 +683,7 @@ function loadLevel(idx) {
   shadow.position.y = -objRadius * .78; shadow.scale.setScalar(objRadius * 3.2);
   G.alive = G.total = cubes.length; G.pops = [];
   G.streak = 0; G.bestStreak = 0; G.elapsed = 0; G.winTimer = -1; G.timeScale = 1; G.slowT = 0; G.stuckTimer = 0; G.rescued = false;
-  G.slotCount = SLOTS; G.tilt = 0;
+  G.slotCount = SLOTS; G.quat.identity(); G.angVel.set(0, 0, 0);
   makeGuns();
   $('levelName').textContent = L.name;
   updateProgress();
@@ -958,12 +958,19 @@ function frameCamera() {
 }
 addEventListener('resize', frameCamera);
 
-/* ---- Spin and tilt by dragging ---- */
+/* ---- Free rotation by dragging: a trackball. Horizontal drag turns about the world's up axis,
+   vertical drag about the screen's sideways axis, in any combination, with inertia on release. ---- */
 let dragX = 0, dragY = 0, dragT = 0;
-canvas.addEventListener('pointerdown', (e) => { G.dragging = true; dragX = e.clientX; dragY = e.clientY; dragT = performance.now(); G.spinVel = 0; canvas.setPointerCapture(e.pointerId); });
+const DRAG = .009, qTmp = new THREE.Quaternion(), axisTmp = new THREE.Vector3(), Y_AXIS = new THREE.Vector3(0, 1, 0);
+function rotateBy(axisVel, dt) { // axisVel: world-space axis scaled by angular speed (rad/s)
+  const a = axisVel.length() * dt; if (a < 1e-6) return;
+  axisTmp.copy(axisVel).normalize(); qTmp.setFromAxisAngle(axisTmp, a); G.quat.premultiply(qTmp);
+}
+canvas.addEventListener('pointerdown', (e) => { G.dragging = true; dragX = e.clientX; dragY = e.clientY; dragT = performance.now(); G.angVel.set(0, 0, 0); canvas.setPointerCapture(e.pointerId); });
 canvas.addEventListener('pointermove', (e) => {
   if (!G.dragging) return; const dx = e.clientX - dragX, dy = e.clientY - dragY, now = performance.now(), dt = Math.max(1, now - dragT) / 1000;
-  G.spin += dx * .011; G.spinVel = (dx * .011) / dt; G.tilt = clamp(G.tilt + dy * .005, -.45, .45);
+  axisTmp.set(dy * DRAG, dx * DRAG, 0);               // drag right -> turn about +Y; drag down -> turn about +X
+  rotateBy(axisTmp, 1); G.angVel.copy(axisTmp).divideScalar(dt);
   dragX = e.clientX; dragY = e.clientY; dragT = now;
 });
 const endDrag = () => { G.dragging = false; };
@@ -981,10 +988,10 @@ function tick(now) {
   const sdt = dt * G.timeScale;
   if (playing) G.elapsed += dt;
 
-  // Object motion: slow turn, breathing bob, drag with inertia, tilt that eases back
+  // Object motion: slow turn about the up axis, breathing bob, free drag with inertia
   const auto = reducedMotion ? 0 : (G.state === 'win' ? .9 : .2);
-  if (!G.dragging) { G.spinVel *= Math.pow(.05, dt); G.spin += (G.spinVel + auto) * dt; G.tilt += (0 - G.tilt) * Math.min(1, dt * 1.5); }
-  group.rotation.set(G.tilt, G.spin, 0);
+  if (!G.dragging) { G.angVel.multiplyScalar(Math.pow(.05, dt)); rotateBy(G.angVel, dt); rotateBy(axisTmp.copy(Y_AXIS).multiplyScalar(auto), dt); }
+  group.quaternion.copy(G.quat);
   group.position.y = Math.sin(now / 1000 * .9) * .12;
   group.updateMatrixWorld();
   camLocal.copy(camera.position); group.worldToLocal(camLocal);
